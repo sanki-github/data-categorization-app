@@ -1,0 +1,16 @@
+<%- include('layout', { body: `
+  <h2>${item ? 'Edit' : 'New'} Item</h2>
+  <form id="itemForm" method="post" action="${item ? '/items/' + item.id : '/items'}">
+    <label>SKU<br><input name="sku" type="text" value="${item ? item.sku : ''}" required></label><br>
+    <label>Name<br><input name="name" type="text" value="${item ? item.name : ''}" required></label><br>
+    <label>Primary detail<br><input name="primary_detail" type="text" value="${item ? item.primary_detail : ''}"></label><br>
+    <label>Category<br>
+      <select name="category_id">
+        <option value="">-- uncategorized --</option>
+        ${categories.map(c => `<option value="${c.id}" ${item && item.category_id===c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+      </select>
+    </label><br>
+    <button type="submit">Save</button>
+  </form>
+  <script src="/client.js"></script>
+` }) %>

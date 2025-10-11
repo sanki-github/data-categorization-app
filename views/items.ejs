@@ -1,0 +1,83 @@
+<%- include('layout', { body: `
+  <h2>Item Maintenance</h2>
+  <div class="controls-row">
+    <form method="get" action="/items" class="filter-form">
+      <input type="text" name="search" placeholder="Search SKU or name" value="${search || ''}" />
+      <select name="category_id">
+        <option value="">All categories</option>
+        <option value="__uncategorized__" ${categoryId==='__uncategorized__' ? 'selected' : ''}>Uncategorized</option>
+        ${categories.map(c => `<option value="${c.id}" ${categoryId===c.id? 'selected' : ''}>${c.name}</option>`).join('')}
+      </select>
+      <label class="small">Page size <select name="pageSize">
+        <option value="10" ${pageSize==10? 'selected':''}>10</option>
+        <option value="20" ${pageSize==20? 'selected':''}>20</option>
+        <option value="50" ${pageSize==50? 'selected':''}>50</option>
+      </select></label>
+      <button type="submit" class="btn-small">Filter</button>
+    </form>
+
+    <form id="bulkAssignForm" method="post" action="/items/bulk_assign" class="bulk-assign-form">
+      <label class="small"><input type="checkbox" id="selectAll" /> Select all</label>
+      <label class="small">Assign selected to
+        <select name="category_id">
+          <option value="">-- choose category --</option>
+          ${categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+        </select>
+      </label>
+      <button type="submit" class="btn-small">Assign</button>
+    </form>
+
+    <div class="bulk-upload">
+      <button id="bulkBtn" type="button" onclick="document.getElementById('bulkModal').style.display='block'" class="btn-small">Bulk upload (Excel/CSV)</button>
+    </div>
+  </div>
+  <div id="bulkModal" style="display:none; border:1px solid #ccc; padding:12px; background:#fff; position:fixed; left:50%; top:20%; transform:translateX(-50%); z-index:1000;">
+    <h3>Bulk upload items</h3>
+    <p>Download a template and fill it, then upload here:</p>
+    <p><a href="/template.csv" download>Download CSV template</a> | <a href="/template.xlsx" download>Download Excel template</a></p>
+      <form method="post" action="/uploads" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".csv,.xlsx" required>
+      <div style="margin:8px 0;"><label for="dedupe_mode">On duplicate SKU:</label>
+        <select name="dedupe_mode" id="dedupe_mode">
+          <option value="skip" selected>Skip duplicates</option>
+          <option value="update">Update existing</option>
+          <option value="duplicate">Allow duplicates</option>
+        </select>
+      </div>
+      <button type="submit">Upload</button>
+      <button type="button" id="bulkCancel" onclick="document.getElementById('bulkModal').style.display='none'">Cancel</button>
+    </form>
+  </div>
+  <table>
+    <thead><tr><th>SKU</th><th>Name</th><th>Primary Detail</th><th>Category</th><th>Updated By</th><th>Updated At</th><th>Action</th></tr></thead>
+    <tbody>
+      ${items.map(item => `
+        <tr>
+          <td style="width:36px;"><input type="checkbox" class="item-checkbox" name="item_ids" value="${item.id}" form="bulkAssignForm"></td>
+          <td style="display:none"><input type="hidden" form="bulkAssignForm" name="_csrf" value=""></td>
+          <td>${item.sku}</td>
+          <td>${item.name}</td>
+          <td>${item.primary_detail || ''}</td>
+          <td>
+            <form method="post" action="/items/${item.id}/categorize" class="category-form">
+              <select name="category_id">
+                <option value="">-- uncategorized --</option>
+                ${categories.map(c => `<option value="${c.id}" ${item.category_id===c.id? 'selected' : ''}>${c.name}</option>`).join('')}
+              </select>
+              <button type="submit" class="btn-small">Save</button>
+            </form>
+          </td>
+          <td>${item.updated_by_email || ''}</td>
+          <td>${item.updated_at ? new Date(item.updated_at).toLocaleString() : ''}</td>
+          <td></td>
+        </tr>
+        `).join('')}
+    </tbody>
+  </table>
+    <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+      <div>Page ${page} of ${totalPages} (${total} items)</div>
+      <div>
+        ${Array.from({length: totalPages}).map((_,i) => `<a href="/items?page=${i+1}&pageSize=${pageSize}&search=${encodeURIComponent(search||'')}&category_id=${categoryId||''}" style="margin-right:6px;">${i+1}</a>`).join('')}
+      </div>
+    </div>
+` }) %>

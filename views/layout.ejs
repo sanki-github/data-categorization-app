@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Data Categorization App</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="header-grid">
+      <div class="header-left">
+        <img src="/logo.svg" alt="BDCA" class="logo" />
+      </div>
+      <div class="header-center">
+        <h1 class="center-title">Bright Data Categorization Application</h1>
+        <div class="tagline">Fast retail item categorization with audit trails</div>
+      </div>
+      <div class="header-right">
+        <nav>
+        <% if (currentUser) { %>
+          <span class="user-email"><%= currentUser.email %></span>
+          <a href="/items">Items</a> | <a href="/uploads">Uploads</a>
+          <form method="post" action="/logout" style="display:inline"><button type="submit">Logout</button></form>
+        <% } else { %>
+          <a href="/login">Login</a> | <a href="/register">Register</a>
+        <% } %>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <%- body %>
+    </main>
+    <script src="/client.js"></script>
+  </body>
+</html>

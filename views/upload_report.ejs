@@ -1,0 +1,11 @@
+<%- include('layout', { body: `
+  <h2>Upload report: ${upload.filename}</h2>
+  <p>Status: ${upload.status} — Items created: ${upload.items_created}</p>
+  <p><a href="/uploads/${upload.id}/failed.csv">Download failed rows (CSV)</a></p>
+  <table>
+    <thead><tr><th>Row</th><th>Status</th><th>Message</th><th>Raw data</th></tr></thead>
+    <tbody>
+      ${rows.map(r => `<tr><td>${r.row_number}</td><td>${r.status}</td><td>${r.message || ''}</td><td><pre>${r.raw_data}</pre></td></tr>`).join('')}
+    </tbody>
+  </table>
+` }) %>

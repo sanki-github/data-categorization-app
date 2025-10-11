@@ -1,0 +1,132 @@
+name: Deploy Backend to App Runner
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'server.js'
+      - 'src/**'
+      - 'package.json'
+      - 'Dockerfile'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-west-2
+  ECR_REPOSITORY: data-categorization-backend
+  APP_RUNNER_SERVICE: data-categorization-backend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create ECR repository if it doesn't exist
+        run: |
+          aws ecr describe-repositories --repository-names $ECR_REPOSITORY || \
+          aws ecr create-repository --repository-name $ECR_REPOSITORY
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create App Runner service
+        run: |
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          IMAGE_URI=${{ steps.build-image.outputs.image }}
+          
+          # Check if service exists
+          if aws apprunner describe-service --service-arn "arn:aws:apprunner:$AWS_REGION:$(aws sts get-caller-identity --query Account --output text):service/$APP_RUNNER_SERVICE" 2>/dev/null; then
+            echo "Service exists, updating..."
+            aws apprunner update-service \
+              --service-arn "arn:aws:apprunner:$AWS_REGION:$(aws sts get-caller-identity --query Account --output text):service/$APP_RUNNER_SERVICE" \
+              --source-configuration '{
+                "ImageRepository": {
+                  "ImageIdentifier": "'$IMAGE_URI'",
+                  "ImageConfiguration": {
+                    "Port": "3000",
+                    "RuntimeEnvironmentVariables": {
+                      "NODE_ENV": "production"
+                    }
+                  },
+                  "ImageRepositoryType": "ECR"
+                },
+                "AutoDeploymentsEnabled": false
+              }'
+          else
+            echo "Service doesn't exist, creating..."
+            aws apprunner create-service \
+              --service-name $APP_RUNNER_SERVICE \
+              --source-configuration '{
+                "ImageRepository": {
+                  "ImageIdentifier": "'$IMAGE_URI'",
+                  "ImageConfiguration": {
+                    "Port": "3000",
+                    "RuntimeEnvironmentVariables": {
+                      "NODE_ENV": "production"
+                    }
+                  },
+                  "ImageRepositoryType": "ECR"
+                },
+                "AutoDeploymentsEnabled": false
+              }' \
+              --instance-configuration '{
+                "Cpu": "0.25 vCPU",
+                "Memory": "0.5 GB"
+              }'
+          fi
+
+      - name: Wait for deployment to complete
+        run: |
+          echo "Waiting for App Runner service to be ready..."
+          aws apprunner wait service-operation-succeeded \
+            --service-arn "arn:aws:apprunner:$AWS_REGION:$(aws sts get-caller-identity --query Account --output text):service/$APP_RUNNER_SERVICE" || true
+          
+          # Get service URL
+          SERVICE_URL=$(aws apprunner describe-service \
+            --service-arn "arn:aws:apprunner:$AWS_REGION:$(aws sts get-caller-identity --query Account --output text):service/$APP_RUNNER_SERVICE" \
+            --query 'Service.ServiceUrl' --output text)
+          
+          echo "App Runner service deployed at: https://$SERVICE_URL"
+          echo "SERVICE_URL=https://$SERVICE_URL" >> $GITHUB_ENV
+
+      - name: Health check
+        run: |
+          echo "Testing backend health..."
+          max_attempts=10
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f -s "$SERVICE_URL" > /dev/null; then
+              echo "✅ Backend is healthy at $SERVICE_URL"
+              break
+            else
+              echo "⏳ Attempt $attempt/$max_attempts failed, waiting 30s..."
+              sleep 30
+              attempt=$((attempt + 1))
+            fi
+          done
+          
+          if [ $attempt -gt $max_attempts ]; then
+            echo "❌ Backend health check failed after $max_attempts attempts"
+            exit 1
+          fi

@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  CloudFormation template that creates an S3 bucket configured for static website
+  hosting and a public bucket policy. This is intended for development or low-cost
+  static hosting. For production use CloudFront in front of the bucket.
+
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub '${SiteBucket.Arn}/*'
+
+Outputs:
+  BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref SiteBucket
+
+  WebsiteURL:
+    Description: S3 static website URL
+    Value: !GetAtt SiteBucket.WebsiteURL

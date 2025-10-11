@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFront distribution in front of S3 bucket with an ACM cert (certificate must be in us-east-1 for CloudFront)
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket that contains the static site
+  AcmCertificateArn:
+    Type: String
+    Description: ACM certificate ARN in us-east-1 for your domain
+
+Resources:
+  SiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Origins:
+          - Id: S3Origin
+            DomainName: !Sub '${BucketName}.s3.amazonaws.com'
+            S3OriginConfig: {}
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        DefaultRootObject: index.html
+        ViewerCertificate:
+          AcmCertificateArn: !Ref AcmCertificateArn
+          SslSupportMethod: sni-only
+
+Outputs:
+  DistributionId:
+    Value: !Ref SiteDistribution
+  DistributionDomainName:
+    Value: !GetAtt SiteDistribution.DomainName

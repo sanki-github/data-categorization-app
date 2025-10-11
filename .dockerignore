@@ -1,0 +1,7 @@
+node_modules
+tmp_uploads
+data.sqlite
+.env
+.git
+.gitignore
+.DS_Store

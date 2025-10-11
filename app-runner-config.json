@@ -1,0 +1,10 @@
+{
+  "ImageRepository": {
+    "ImageIdentifier": "public.ecr.aws/aws-containers/hello-app-runner:latest",
+    "ImageConfiguration": {
+      "Port": "8000"
+    },
+    "ImageRepositoryType": "ECR_PUBLIC"
+  },
+  "AutoDeploymentsEnabled": false
+}

@@ -1,0 +1,126 @@
+name: Build & Deploy to App Runner
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  ECR_REPOSITORY: bdca-app
+  APP_RUNNER_SERVICE: bdca-apprunner
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Get AWS account ID
+        id: account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+
+      - name: Ensure ECR repository exists
+        run: |
+          aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ secrets.AWS_REGION }} 2>/dev/null || true
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin "${{ steps.account.outputs.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com"
+
+      - name: Build and push Docker image to ECR
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.account.outputs.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+            ${{ steps.account.outputs.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+
+      - name: Determine existing App Runner service ARN (if any)
+        id: find_service
+        run: |
+          SERVICE_ARN=$(aws apprunner list-services --region ${{ secrets.AWS_REGION }} --query "ServiceSummaryList[?ServiceName=='${{ env.APP_RUNNER_SERVICE }}'].[ServiceArn]" --output text)
+          echo "SERVICE_ARN=$SERVICE_ARN" >> $GITHUB_OUTPUT
+
+      - name: Create or update App Runner service
+        run: |
+          IMAGE_URI="${{ steps.account.outputs.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+
+          # Build runtime environment variables array from GitHub secrets (optional)
+          RUNTIME_VARS=()
+          if [ -n "${{ secrets.SESSION_SECRET }}" ]; then RUNTIME_VARS+=("{\"Name\":\"SESSION_SECRET\",\"Value\":\"${{ secrets.SESSION_SECRET }}\"}"); fi
+          if [ -n "${{ secrets.DATABASE_URL }}" ]; then RUNTIME_VARS+=("{\"Name\":\"DATABASE_URL\",\"Value\":\"${{ secrets.DATABASE_URL }}\"}"); fi
+          if [ -n "${{ secrets.S3_UPLOAD_BUCKET }}" ]; then RUNTIME_VARS+=("{\"Name\":\"S3_UPLOAD_BUCKET\",\"Value\":\"${{ secrets.S3_UPLOAD_BUCKET }}\"}"); fi
+          if [ -n "${{ secrets.NODE_ENV }}" ]; then RUNTIME_VARS+=("{\"Name\":\"NODE_ENV\",\"Value\":\"${{ secrets.NODE_ENV }}\"}"); fi
+
+          if [ ${#RUNTIME_VARS[@]} -gt 0 ]; then
+            RUNTIME_JSON="[${RUNTIME_VARS[*]}]"
+          else
+            RUNTIME_JSON="[]"
+          fi
+
+          # Create source config JSON file for App Runner
+          cat > source-config.json <<EOF
+{
+  "ImageRepository": {
+    "ImageIdentifier": "${IMAGE_URI}",
+    "ImageRepositoryType": "ECR",
+    "ImageConfiguration": {
+      "Port": "3000",
+      "RuntimeEnvironmentVariables": ${RUNTIME_JSON}
+    }
+  }
+}
+EOF
+
+          if [ -z "${{ steps.find_service.outputs.SERVICE_ARN }}" ]; then
+            echo "Creating App Runner service '${{ env.APP_RUNNER_SERVICE }}' from image ${IMAGE_URI}"
+            aws apprunner create-service \
+              --service-name "${{ env.APP_RUNNER_SERVICE }}" \
+              --source-configuration file://source-config.json \
+              --region ${{ secrets.AWS_REGION }}
+          else
+            echo "Updating App Runner service '${{ env.APP_RUNNER_SERVICE }}' with image ${IMAGE_URI}"
+            aws apprunner update-service \
+              --service-arn "${{ steps.find_service.outputs.SERVICE_ARN }}" \
+              --source-configuration file://source-config.json \
+              --region ${{ secrets.AWS_REGION }}
+          fi
+
+      - name: Output App Runner URL
+        run: |
+          # Wait a bit for service to register
+          sleep 8
+          SERVICE_ARN=$(aws apprunner list-services --region ${{ secrets.AWS_REGION }} --query "ServiceSummaryList[?ServiceName=='${{ env.APP_RUNNER_SERVICE }}'].[ServiceArn]" --output text)
+          aws apprunner describe-service --service-arn $SERVICE_ARN --region ${{ secrets.AWS_REGION }} --query 'Service.Url' --output text
+
+      - name: Health check App Runner service
+        run: |
+          echo "Checking App Runner service health..."
+          SERVICE_ARN=$(aws apprunner list-services --region ${{ secrets.AWS_REGION }} --query "ServiceSummaryList[?ServiceName=='${{ env.APP_RUNNER_SERVICE }}'].[ServiceArn]" --output text)
+          SERVICE_URL=$(aws apprunner describe-service --service-arn $SERVICE_ARN --region ${{ secrets.AWS_REGION }} --query 'Service.Url' --output text)
+          echo "Service URL: $SERVICE_URL"
+
+          # Retry loop: try up to 12 times, 10s apart (total ~2 minutes)
+          for i in {1..12}; do
+            echo "Attempt $i: GET $SERVICE_URL"
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL")
+            echo "HTTP status: $status"
+            if [ "$status" -ge 200 ] && [ "$status" -lt 400 ]; then
+              echo "Health check passed (status $status)"
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "Health check failed after retries; last status: $status"
+          exit 1

@@ -1,0 +1,9 @@
+<%- include('layout', { body: `
+  <h2>Users</h2>
+  <table>
+    <thead><tr><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+    <tbody>
+      ${users.map(u => `<tr><td>${u.email}</td><td>${u.role}</td><td>${u.role!=='admin' ? `<form method="post" action="/admin/users/${u.id}/promote"><button type="submit">Promote to admin</button></form>` : ''}</td></tr>`).join('')}
+    </tbody>
+  </table>
+` }) %>

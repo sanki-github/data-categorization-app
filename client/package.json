@@ -1,0 +1,17 @@
+{
+  "name": "data-categorization-client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "npx serve -s build -l 3001",
+    "build": "npx esbuild src/index.jsx --bundle --minify --sourcemap --outfile=build/index.js --loader:.js=jsx"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.18.20",
+    "serve": "^14.1.2"
+  }
+}

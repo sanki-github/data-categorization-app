@@ -1,0 +1,9 @@
+<%- include('layout', { body: `
+  <h2>Upload Items CSV</h2>
+  ${error ? `<p class="error">${error}</p>` : ''}
+  ${info ? `<p class="info">${info}</p>` : ''}
+  <form method="post" action="/uploads" enctype="multipart/form-data">
+    <label>CSV file (columns: sku,name,primary_detail,category)<br><input type="file" name="file" accept=".csv" required></label><br>
+    <button type="submit">Upload</button>
+  </form>
+` }) %>

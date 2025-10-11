@@ -1,0 +1,13 @@
+<%- include('layout', { body: `
+  <h2>Uploads</h2>
+  <form method="get" action="/uploads">
+    <label>Filter by user id or email<br><input name="user_id" type="text" placeholder="user id or email (optional)" /></label>
+    <button type="submit">Filter</button>
+  </form>
+  <table>
+    <thead><tr><th>Filename</th><th>User</th><th>Items Created</th><th>Size</th><th>Status</th><th>Dedupe</th><th>When</th></tr></thead>
+    <tbody>
+      ${uploads.map(u => `<tr><td><a href="/uploads/${u.id}">${u.filename}</a></td><td>${u.user_email}</td><td>${u.items_created}</td><td>${u.file_size}</td><td>${u.status}</td><td>${u.dedupe_mode || ''}</td><td>${new Date(u.created_at).toLocaleString()}</td></tr>`).join('')}
+    </tbody>
+  </table>
+` }) %>
