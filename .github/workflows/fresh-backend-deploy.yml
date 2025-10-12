@@ -1,0 +1,61 @@
+name: Fresh Backend Deployment to Azure Container Apps
+
+on:
+  push:
+    branches: [ main, master ]
+    paths: [ 'server.js', 'src/**', 'views/**', 'package.json', 'package-lock.json', 'Dockerfile' ]
+  workflow_dispatch:
+
+env:
+  REGISTRY_LOGIN_SERVER: datacategorizationregistry.azurecr.io
+  REGISTRY_USERNAME: datacategorizationregistry
+  IMAGE_NAME: fullstack-app
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.REGISTRY_LOGIN_SERVER }}
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push container image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+        file: ./Dockerfile
+        platforms: linux/amd64
+
+    - name: Deploy to Azure Container Apps
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.30.0
+        inlineScript: |
+          # Login to Azure (using service principal stored in secrets)
+          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+          
+          # Update Container App with new image
+          az containerapp update \
+            --name data-categorization-backend \
+            --resource-group data-categorization-rg \
+            --image ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --revision-suffix fresh-$(date +%s)
+
+    - name: Deployment completed
+      run: |
+        echo "✅ Fresh backend deployment completed!"
+        echo "📍 Image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        echo "🌐 Backend URL: https://data-categorization-backend.whitebush-303875e0.eastus.azurecontainerapps.io"
