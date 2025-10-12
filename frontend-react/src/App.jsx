@@ -25,7 +25,7 @@ export default function App(){
     return (
       <main style={{fontFamily: 'system-ui, sans-serif', padding: 24, maxWidth: 900, margin: '32px auto'}}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h1>Data Categorization Dashboard</h1>
+          <h1>🚀 Data Categorization Dashboard</h1>
           <div>
             <span style={{ marginRight: '16px' }}>Welcome, {user.email}</span>
             <button 
