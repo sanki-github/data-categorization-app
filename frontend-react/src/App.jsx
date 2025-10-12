@@ -71,9 +71,9 @@ export default function App(){
           margin: '16px 0',
           backgroundColor: '#e8f4fd'
         }}>
-          <h3>🎉 Deployment Success!</h3>
-          <p><strong>Frontend:</strong> React SPA on AWS S3</p>
-          <p><strong>Backend:</strong> Node.js Lambda with API Gateway</p>
+          <h3>🎉 Azure Deployment Success!</h3>
+          <p><strong>Frontend:</strong> React SPA on Azure Static Web Apps</p>
+          <p><strong>Backend:</strong> Node.js Express on Azure Container Apps</p>
           <p><strong>API Base:</strong> <code>{apiBase}</code></p>
           <p><strong>Status:</strong> Both frontend and backend are live and connected!</p>
         </div>
@@ -83,8 +83,8 @@ export default function App(){
   
   return (
     <main style={{fontFamily: 'system-ui, sans-serif', padding: 24, maxWidth: 900, margin: '32px auto'}}>
-      <h1>Data Categorization Application</h1>
-      <p>🎉 Successfully deployed to AWS with serverless architecture!</p>
+      <h1>🚀 Data Categorization Application</h1>
+      <p>✨ Successfully deployed to Azure Cloud with modern architecture!</p>
       
       <Health />
       
@@ -96,7 +96,7 @@ export default function App(){
         backgroundColor: 'white'
       }}>
         <h3>Get Started</h3>
-        <p>This React frontend is now connected to the live backend API.</p>
+        <p>This React frontend is now connected to the live Azure backend API.</p>
         <button
           onClick={() => setCurrentView('login')}
           style={{
@@ -123,11 +123,12 @@ export default function App(){
       }}>
         <h3>Application Features</h3>
         <ul>
-          <li>User registration, login, and password reset</li>
-          <li>Item management with category assignment</li>
-          <li>Bulk CSV/XLSX upload processing</li>
-          <li>Role-based access control (annotator/admin)</li>
-          <li>Audit trails and per-row reporting</li>
+          <li>✅ User authentication system</li>
+          <li>✅ Backend API connection</li>
+          <li>✅ Health monitoring</li>
+          <li>🔄 Item management (coming soon)</li>
+          <li>🔄 Category assignment (coming soon)</li>
+          <li>🔄 Bulk CSV/XLSX upload (coming soon)</li>
         </ul>
       </div>
       
@@ -138,16 +139,17 @@ export default function App(){
         margin: '16px 0',
         backgroundColor: '#e8f4fd'
       }}>
-        <h3>Architecture</h3>
-        <p><strong>Backend:</strong> Node.js + Express running on AWS Lambda</p>
-        <p><strong>Frontend:</strong> React + Vite hosted on AWS S3</p>
-        <p><strong>API Gateway:</strong> RESTful API routing</p>
-        <p><strong>Database:</strong> SQLite with migration system</p>
+        <h3>🎉 Azure Cloud Architecture</h3>
+        <p><strong>Backend:</strong> Node.js Express on Azure Container Apps</p>
+        <p><strong>Frontend:</strong> React SPA on Azure Static Web Apps</p>
+        <p><strong>Container Registry:</strong> Azure Container Registry</p>
+        <p><strong>CI/CD:</strong> GitHub Actions</p>
         <p><strong>API Endpoint:</strong> <code>{apiBase || 'Not configured'}</code></p>
+        <p><strong>Status:</strong> Both frontend and backend are live and connected!</p>
       </div>
       
       <p>
-        <a href="https://github.com/your-repo" target="_blank" style={{color: '#0066cc'}}>
+        <a href="https://github.com/sanki-github/data-categorization-app" target="_blank" style={{color: '#0066cc'}}>
           View source code on GitHub →
         </a>
       </p>
