@@ -1,19 +1,19 @@
 {
   "name": "data-categorization-azure-backend",
   "version": "1.0.0",
-  "description": "Azure Functions backend for Data Categorization App",
-  "main": "index.js",
+  "description": "Azure Container Apps backend for Data Categorization App",
+  "main": "server.js",
   "scripts": {
-    "start": "func start",
+    "start": "node server.js",
+    "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@azure/functions": "^4.0.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
     "bcrypt": "^5.1.0",
     "sqlite3": "^5.1.6",
     "uuid": "^9.0.0"
   },
-  "devDependencies": {
-    "azure-functions-core-tools": "^4.0.0"
-  }
+  "devDependencies": {}
 }

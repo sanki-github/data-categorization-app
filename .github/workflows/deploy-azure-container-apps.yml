@@ -1,0 +1,50 @@
+name: Deploy Backend to Azure Container Apps
+
+on:
+  push:
+    branches: [ main, master ]
+    paths: [ 'azure-backend/**' ]
+  workflow_dispatch:
+
+env:
+  REGISTRY_LOGIN_SERVER: datacategorizationregistry.azurecr.io
+  REGISTRY_USERNAME: datacategorizationregistry
+  CONTAINER_APP_NAME: data-categorization-backend
+  CONTAINER_APP_ENV: data-categorization-env
+  RESOURCE_GROUP: data-categorization-rg
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.REGISTRY_LOGIN_SERVER }}
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push container image to registry
+      uses: docker/build-push-action@v4
+      with:
+        context: ./azure-backend
+        push: true
+        tags: ${{ env.REGISTRY_LOGIN_SERVER }}/backend:${{ github.sha }}
+        file: ./azure-backend/Dockerfile
+
+    - name: Deploy to Azure Container Apps
+      uses: azure/container-apps-deploy-action@v1
+      with:
+        appSourcePath: ${{ github.workspace }}/azure-backend
+        acrName: datacategorizationregistry
+        containerAppName: ${{ env.CONTAINER_APP_NAME }}
+        containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
+        resourceGroup: ${{ env.RESOURCE_GROUP }}
+        imageToDeploy: ${{ env.REGISTRY_LOGIN_SERVER }}/backend:${{ github.sha }}
+        azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
