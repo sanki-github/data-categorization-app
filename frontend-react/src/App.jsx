@@ -7,7 +7,7 @@ export default function App(){
   const [user, setUser] = useState(null);
   const [currentView, setCurrentView] = useState('home');
   const apiBase = config.API_BASE_URL;
-  console.log('Fresh deployment - Frontend connecting to:', apiBase);
+  console.log('✅ Simplified deployment - Frontend connecting to:', apiBase);
   
   const handleLogin = (userData) => {
     setUser(userData);

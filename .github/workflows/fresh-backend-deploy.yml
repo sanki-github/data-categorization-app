@@ -1,4 +1,4 @@
-name: Fresh Backend Deployment to Azure Container Apps
+name: Build Backend Docker Image
 
 on:
   push:
@@ -12,7 +12,7 @@ env:
   IMAGE_NAME: fullstack-app
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -39,23 +39,9 @@ jobs:
         file: ./Dockerfile
         platforms: linux/amd64
 
-    - name: Deploy to Azure Container Apps
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.30.0
-        inlineScript: |
-          # Login to Azure (using service principal stored in secrets)
-          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-          
-          # Update Container App with new image
-          az containerapp update \
-            --name data-categorization-backend \
-            --resource-group data-categorization-rg \
-            --image ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            --revision-suffix fresh-$(date +%s)
-
-    - name: Deployment completed
+    - name: Image built successfully
       run: |
-        echo "✅ Fresh backend deployment completed!"
+        echo "✅ Backend image built and pushed successfully!"
         echo "📍 Image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-        echo "🌐 Backend URL: https://data-categorization-backend.whitebush-303875e0.eastus.azurecontainerapps.io"
+        echo "📍 Latest: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest"
+        echo "🔧 Update Container App manually with: ${{ github.sha }}"
