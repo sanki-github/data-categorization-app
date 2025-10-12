@@ -48,9 +48,7 @@ export default function Health() {
       margin: '16px 0',
       backgroundColor: '#f8f9fa'
     }}>
-      <h3>Backend Health Status</h3>
-      
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+          <h3>🏥 Backend Health Status</h3>      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{
           width: '12px',
           height: '12px',

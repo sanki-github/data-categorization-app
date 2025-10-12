@@ -35,11 +35,12 @@ app.http('api', {
                     status: 200,
                     headers: corsHeaders,
                     jsonBody: {
-                        message: 'Azure Backend is working!',
+                        message: 'Azure Backend is working successfully!',
                         timestamp: new Date().toISOString(),
                         path: path,
                         method: method,
-                        platform: 'Azure Functions'
+                        platform: 'Azure Functions',
+                        version: '1.0.1'
                     }
                 };
             }
