@@ -1,0 +1,43 @@
+name: Deploy Full-Stack App to Azure Container Apps
+
+on:
+  push:
+    branches: [ main, master ]
+    paths: [ 'server.js', 'src/**', 'views/**', 'package.json' ]
+  workflow_dispatch:
+
+env:
+  REGISTRY_LOGIN_SERVER: datacategorizationregistry.azurecr.io
+  REGISTRY_USERNAME: datacategorizationregistry
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.REGISTRY_LOGIN_SERVER }}
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push container image to registry
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ env.REGISTRY_LOGIN_SERVER }}/fullstack-app:${{ github.sha }}
+          ${{ env.REGISTRY_LOGIN_SERVER }}/fullstack-app:latest
+        file: ./Dockerfile
+
+    - name: Full-stack app built successfully
+      run: |
+        echo "✅ Full-stack container image built and pushed successfully!"
+        echo "📍 Image: ${{ env.REGISTRY_LOGIN_SERVER }}/fullstack-app:latest"
