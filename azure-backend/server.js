@@ -13,7 +13,7 @@ app.get('/health', (req, res) => {
         message: 'Azure Container Apps backend is working successfully!',
         timestamp: new Date().toISOString(),
         platform: 'Azure Container Apps',
-        version: '1.0.2',
+        version: '1.0.3',
         status: 'healthy'
     });
 });
