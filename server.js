@@ -14,7 +14,7 @@ const fs = require('fs');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Updated for Azure Container Apps deployment
+const PORT = process.env.PORT || 3000; // Updated for Azure Container Apps deployment - fixed image tag
 
 // CORS configuration for React frontend
 app.use(cors({
