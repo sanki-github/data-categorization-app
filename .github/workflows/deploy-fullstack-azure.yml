@@ -37,7 +37,18 @@ jobs:
           ${{ env.REGISTRY_LOGIN_SERVER }}/fullstack-app:latest
         file: ./Dockerfile
 
-    - name: Full-stack app built successfully
+    - name: Deploy to Azure Container Apps
+      uses: azure/container-apps-deploy-action@v1
+      with:
+        appSourcePath: ${{ github.workspace }}
+        acrName: datacategorizationregistry
+        containerAppName: datacategorization-app
+        resourceGroup: datacategorization-rg
+        imageToDeploy: ${{ env.REGISTRY_LOGIN_SERVER }}/fullstack-app:latest
+        azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Full-stack app deployed successfully
       run: |
-        echo "✅ Full-stack container image built and pushed successfully!"
+        echo "✅ Full-stack application deployed successfully!"
         echo "📍 Image: ${{ env.REGISTRY_LOGIN_SERVER }}/fullstack-app:latest"
+        echo "🌐 Check your Container App URL to see the EJS application"

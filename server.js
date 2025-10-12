@@ -13,7 +13,7 @@ const XLSX = require('xlsx');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Updated for Azure deployment
+const PORT = process.env.PORT || 3000; // Updated for Azure Container Apps deployment
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
