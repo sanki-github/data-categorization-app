@@ -32,7 +32,9 @@ jobs:
       with:
         context: ./azure-backend
         push: true
-        tags: ${{ env.REGISTRY_LOGIN_SERVER }}/backend:${{ github.sha }}
+        tags: |
+          ${{ env.REGISTRY_LOGIN_SERVER }}/backend:${{ github.sha }}
+          ${{ env.REGISTRY_LOGIN_SERVER }}/backend:latest
         file: ./azure-backend/Dockerfile
 
     - name: Image built successfully
