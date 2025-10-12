@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Health from './components/Health.jsx'
 import Login from './components/Login.jsx'
+import config from './config.js'
 
 export default function App(){
   const [user, setUser] = useState(null);
   const [currentView, setCurrentView] = useState('home');
-  const apiBase = import.meta.env.VITE_API_BASE || '';
+  const apiBase = config.API_BASE_URL;
   
   const handleLogin = (userData) => {
     setUser(userData);

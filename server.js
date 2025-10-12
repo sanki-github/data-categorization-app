@@ -11,14 +11,27 @@ const multer = require('multer');
 const { parse: csvParse } = require('csv-parse');
 const XLSX = require('xlsx');
 const fs = require('fs');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Updated for Azure Container Apps deployment
+
+// CORS configuration for React frontend
+app.use(cors({
+  origin: [
+    'https://localhost:5173',
+    'http://localhost:5173', 
+    'https://victorious-sand-03c6e7910.5.azurestaticapps.net',
+    /\.azurestaticapps\.net$/
+  ],
+  credentials: true
+}));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json()); // Add JSON parsing for API calls
 
 app.use(session({
   store: new SQLiteStore({ db: 'sessions.sqlite' }),

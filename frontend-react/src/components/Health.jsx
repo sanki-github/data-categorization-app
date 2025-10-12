@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import config from '../config.js';
 
 export default function Health() {
   const [healthStatus, setHealthStatus] = useState('checking...');
   const [backendInfo, setBackendInfo] = useState(null);
   const [error, setError] = useState(null);
 
-  const apiBase = import.meta.env.VITE_API_BASE || '';
+  const apiBase = config.API_BASE_URL;
 
   useEffect(() => {
     checkHealth();

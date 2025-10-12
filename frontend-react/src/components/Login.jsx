@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import config from '../config.js';
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -6,7 +7,7 @@ export default function Login({ onLogin }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const apiBase = import.meta.env.VITE_API_BASE || '';
+  const apiBase = config.API_BASE_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
