@@ -19,7 +19,7 @@
     <form id="bulkAssignForm" method="post" action="/items/bulk_assign" class="bulk-assign-form">
       <!-- Preserve current filters and pagination -->
       <input type="hidden" name="search" value="${search || ''}" />
-      <input type="hidden" name="category_id" value="${categoryId || ''}" />
+      <input type="hidden" name="category_id_filter" value="${categoryId || ''}" />
       <input type="hidden" name="page" value="${page || 1}" />
       <input type="hidden" name="pageSize" value="${pageSize || 10}" />
       

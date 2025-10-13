@@ -288,7 +288,7 @@ app.post('/items/bulk_assign', requireAuth, async (req, res) => {
   
   // Preserve current filters and pagination
   const search = req.body.search || '';
-  const categoryFilter = req.body.category_id || '';
+  const categoryFilter = req.body.category_id_filter || '';
   const page = req.body.page || 1;
   const pageSize = req.body.pageSize || 10;
   
