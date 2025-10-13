@@ -12,6 +12,7 @@ async function init() {
     PRAGMA foreign_keys = ON;
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL
     );
@@ -66,6 +67,15 @@ async function init() {
     // add role column with default
     await db.run("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'annotator'");
     await db.run("UPDATE users SET role = 'annotator' WHERE role IS NULL");
+  }
+
+  // migration: ensure 'name' column exists on users
+  const hasName = cols.some(c => c.name === 'name');
+  if (!hasName) {
+    // add name column with default value derived from email
+    await db.run("ALTER TABLE users ADD COLUMN name TEXT");
+    await db.run("UPDATE users SET name = SUBSTR(email, 1, INSTR(email, '@') - 1) WHERE name IS NULL");
+    await db.run("UPDATE users SET name = 'User' WHERE name IS NULL OR name = ''");
   }
 
   // migration: ensure 'file_path' column exists on upload_records
@@ -159,8 +169,8 @@ async function insertUploadRecord({ id, user_id, filename, file_size, items_crea
 }
 
 async function listUploadRecords({ userId } = {}) {
-  if (userId) return db.all('SELECT upload_records.*, users.email as user_email FROM upload_records JOIN users ON upload_records.user_id = users.id WHERE user_id = ? ORDER BY created_at DESC', [userId]);
-  return db.all('SELECT upload_records.*, users.email as user_email FROM upload_records JOIN users ON upload_records.user_id = users.id ORDER BY created_at DESC');
+  if (userId) return db.all('SELECT upload_records.*, COALESCE(users.name, users.email) as user_name FROM upload_records JOIN users ON upload_records.user_id = users.id WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+  return db.all('SELECT upload_records.*, COALESCE(users.name, users.email) as user_name FROM upload_records JOIN users ON upload_records.user_id = users.id ORDER BY created_at DESC');
 }
 
 async function setUploadFilePath(uploadId, filePath) {
@@ -203,8 +213,8 @@ async function getUserById(id) {
   return db.get('SELECT * FROM users WHERE id = ?', [id]);
 }
 
-async function createUser({ id, email, password_hash }) {
-  return db.run('INSERT INTO users(id, email, password_hash, role) VALUES (?, ?, ?, ?)', [id, email, password_hash, 'annotator']);
+async function createUser({ id, email, password_hash, name }) {
+  return db.run('INSERT INTO users(id, email, password_hash, role, name) VALUES (?, ?, ?, ?, ?)', [id, email, password_hash, 'annotator', name]);
 }
 
 async function setUserRole(userId, role) {
@@ -232,7 +242,8 @@ async function listCategories() {
 }
 
 async function listItems() {
-  return db.all(`SELECT items.*, categories.name as category_name, users.email as updated_by_email
+  return db.all(`SELECT items.*, categories.name as category_name, 
+    COALESCE(users.name, users.email) as updated_by_name
     FROM items
     LEFT JOIN categories ON items.category_id = categories.id
     LEFT JOIN users ON items.updated_by = users.id
@@ -277,7 +288,8 @@ async function listItemsPaged({ page = 1, pageSize = 20, search, categoryId } = 
     }
   }
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-  const rows = await db.all(`SELECT items.*, categories.name as category_name, users.email as updated_by_email
+  const rows = await db.all(`SELECT items.*, categories.name as category_name, 
+    COALESCE(users.name, users.email) as updated_by_name
     FROM items
     LEFT JOIN categories ON items.category_id = categories.id
     LEFT JOIN users ON items.updated_by = users.id

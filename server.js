@@ -42,7 +42,11 @@ app.use(session({
 
 // simple middleware to expose user to views
 app.use((req, res, next) => {
-  res.locals.currentUser = req.session.userId ? { id: req.session.userId, email: req.session.userEmail } : null;
+  res.locals.currentUser = req.session.userId ? { 
+    id: req.session.userId, 
+    email: req.session.userEmail, 
+    name: req.session.userName || req.session.userEmail?.split('@')[0] || 'Unknown'
+  } : null;
   next();
 });
 
@@ -64,15 +68,16 @@ app.get('/', async (req, res) => {
 // Register
 app.get('/register', (req, res) => res.render('register'));
 app.post('/register', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.render('register', { error: 'Email and password required' });
+  const { email, password, name } = req.body;
+  if (!email || !password || !name) return res.render('register', { error: 'Name, email and password required' });
   const existing = await db.getUserByEmail(email);
   if (existing) return res.render('register', { error: 'Email already registered' });
   const hash = await bcrypt.hash(password, 10);
   const id = uuidv4();
-  await db.createUser({ id, email, password_hash: hash });
+  await db.createUser({ id, email, password_hash: hash, name });
   req.session.userId = id;
   req.session.userEmail = email;
+  req.session.userName = name;
   res.redirect('/items');
 });
 
@@ -86,6 +91,7 @@ app.post('/login', async (req, res) => {
   if (!ok) return res.render('login', { error: 'Invalid credentials' });
   req.session.userId = user.id;
   req.session.userEmail = user.email;
+  req.session.userName = user.name || user.email.split('@')[0]; // Fallback for existing users
   res.redirect('/items');
 });
 

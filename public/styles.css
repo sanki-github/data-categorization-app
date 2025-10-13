@@ -41,7 +41,7 @@ header nav form button { margin-left:8px }
 .header-center { text-align:center }
 .center-title { margin:0; font-size:20px; color:#0b2540 }
 .header-right { text-align:right }
-.user-email { display:inline-block; margin-right:8px; color:#333 }
+.user-name { display:inline-block; margin-right:8px; color:#333 }
 
 /* Responsive: stack header sections on narrow screens */
 @media (max-width: 720px) {

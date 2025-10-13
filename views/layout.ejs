@@ -18,7 +18,7 @@
       <div class="header-right">
         <nav>
         <% if (currentUser) { %>
-          <span class="user-email"><%= currentUser.email %></span>
+          <span class="user-name"><%= currentUser.name %></span>
           <a href="/items">Items</a> | <a href="/uploads">Uploads</a>
           <form method="post" action="/logout" style="display:inline"><button type="submit">Logout</button></form>
         <% } else { %>
