@@ -285,6 +285,13 @@ app.post('/items/bulk_assign', requireAuth, async (req, res) => {
   let ids = req.body.item_ids || [];
   if (!Array.isArray(ids)) ids = [ids];
   const categoryId = req.body.category_id || null;
+  
+  // Preserve current filters and pagination
+  const search = req.body.search || '';
+  const categoryFilter = req.body.category_id || '';
+  const page = req.body.page || 1;
+  const pageSize = req.body.pageSize || 10;
+  
   for (const id of ids) {
     try {
       await db.updateItem(id, { sku: (await db.getItemById(id)).sku, name: (await db.getItemById(id)).name, primary_detail: (await db.getItemById(id)).primary_detail, category_id: categoryId, updated_by: req.session.userId });
@@ -292,7 +299,16 @@ app.post('/items/bulk_assign', requireAuth, async (req, res) => {
       console.error('Bulk assign error for', id, e);
     }
   }
-  res.redirect('/items');
+  
+  // Build redirect URL with preserved parameters
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (categoryFilter) params.append('category_id', categoryFilter);
+  if (page > 1) params.append('page', page);
+  if (pageSize != 10) params.append('pageSize', pageSize);
+  
+  const redirectUrl = '/items' + (params.toString() ? '?' + params.toString() : '');
+  res.redirect(redirectUrl);
 });
 
 app.post('/items/:id', requireAuth, async (req, res) => {
@@ -334,9 +350,19 @@ app.put('/api/items/:id', requireAuth, async (req, res) => {
 
 app.post('/items/:id/categorize', requireAuth, async (req, res) => {
   const id = req.params.id;
-  const { category_id } = req.body;
+  const { category_id, search, category_id_filter, page, pageSize } = req.body;
+  
   await db.updateItemCategory(id, category_id, req.session.userId);
-  res.redirect('/items');
+  
+  // Build redirect URL with preserved parameters
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (category_id_filter) params.append('category_id', category_id_filter);
+  if (page && page > 1) params.append('page', page);
+  if (pageSize && pageSize != 10) params.append('pageSize', pageSize);
+  
+  const redirectUrl = '/items' + (params.toString() ? '?' + params.toString() : '');
+  res.redirect(redirectUrl);
 });
 
 // Start server
