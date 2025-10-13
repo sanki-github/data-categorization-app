@@ -10,8 +10,8 @@ RUN npm ci --production
 # Copy app source
 COPY . .
 
-# Create uploads directory with proper permissions
-RUN mkdir -p uploads && chown -R node:node uploads
+# Create uploads and tmp_uploads directories with proper permissions
+RUN mkdir -p uploads tmp_uploads && chown -R node:node uploads tmp_uploads
 
 ENV NODE_ENV=production
 # Use PORT environment variable or default to 3000
