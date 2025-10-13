@@ -1,4 +1,4 @@
-name: Build Backend Docker Image
+name: Automated Backend CI/CD to Azure Container Apps
 
 on:
   push:
@@ -10,9 +10,11 @@ env:
   REGISTRY_LOGIN_SERVER: datacategorizationregistry.azurecr.io
   REGISTRY_USERNAME: datacategorizationregistry
   IMAGE_NAME: fullstack-app
+  CONTAINER_APP_NAME: data-categorization-backend
+  RESOURCE_GROUP: data-categorization-rg
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -39,9 +41,41 @@ jobs:
         file: ./Dockerfile
         platforms: linux/amd64
 
-    - name: Image built successfully
-      run: |
-        echo "✅ Backend image built and pushed successfully!"
-        echo "📍 Image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-        echo "📍 Latest: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest"
-        echo "🔧 Update Container App manually with: ${{ github.sha }}"
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to Azure Container Apps
+      uses: azure/CLI@v1
+      with:
+        azcliversion: latest
+        inlineScript: |
+          echo "🚀 Updating Container App with new image..."
+          az containerapp update \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --revision-suffix auto-$(date +%s)
+          
+          echo "✅ Container App updated successfully!"
+          echo "📍 New image: ${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "🌐 Backend URL: https://data-categorization-backend.whitebush-303875e0.eastus.azurecontainerapps.io"
+
+    - name: Verify deployment
+      uses: azure/CLI@v1
+      with:
+        azcliversion: latest
+        inlineScript: |
+          echo "🔍 Checking deployment status..."
+          az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "{Status:properties.runningStatus, Image:properties.template.containers[0].image}" \
+            --output table
+          
+          echo "📋 Recent logs:"
+          az containerapp logs show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --tail 10
