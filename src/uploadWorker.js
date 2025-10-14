@@ -21,13 +21,17 @@ module.exports = function startUploadWorker(db, intervalMs = 2000) {
         }
         let created = 0;
         try {
-          const ext = path.extname(filePath).toLowerCase();
+          // Use original filename for extension detection, not the temp file path
+          const ext = path.extname(u.filename).toLowerCase();
+          console.log(`Processing file: ${u.filename} (extension: ${ext})`);
           let rows = [];
-          if (ext === '.xlsx') {
+          if (ext === '.xlsx' || ext === '.xls') {
+            console.log('Processing as Excel file');
             const workbook = XLSX.readFile(filePath);
             const sheetName = workbook.SheetNames[0];
             rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
           } else {
+            console.log('Processing as CSV file');
             const content = fs.readFileSync(filePath);
             rows = await new Promise((resolve, reject) => {
               csvParse(content, { columns: true, skip_empty_lines: true }, (err, out) => err ? reject(err) : resolve(out));
