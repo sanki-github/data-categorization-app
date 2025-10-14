@@ -103,7 +103,7 @@ async function init() {
 
   // seed categories and items if empty
   // ensure a set of useful categories exist; insert any that are missing
-  const defaultCats = ['Electronics','Home & Kitchen','Clothing','Beauty & Personal Care','Sports & Outdoors','Books','Toys & Games','Automotive','Grocery','Office Products','Health & Household','Tools & Home Improvement','Garden & Outdoor','Pet Supplies'];
+  const defaultCats = ['Electronics','Home & Kitchen','Clothing','Beauty & Personal Care','Sports & Outdoors','Books','Toys & Games','Automotive','Grocery','Office Products','Health & Household','Tools & Home Improvement','Garden & Outdoor','Pet Supplies','Other'];
   for (let i = 0; i < defaultCats.length; i++) {
     const name = defaultCats[i];
     const exists = await db.get('SELECT id FROM categories WHERE name = ?', [name]);
@@ -128,6 +128,7 @@ async function init() {
     { id: 'tools-home-improvement', name: 'Tools & Home Improvement' },
     { id: 'garden-outdoor', name: 'Garden & Outdoor' },
     { id: 'pet-supplies', name: 'Pet Supplies' },
+    { id: 'other', name: 'Other' },
   ];
 
   for (const c of slugMap) {
