@@ -111,7 +111,7 @@ async function init() {
     'Furniture', 'Home Decor', 'Kitchen & Dining', 'Bedding & Bath', 'Storage & Organization', 'Lighting', 'Appliances', 'Vacuum & Floor Care',
     
     // Fashion & Clothing
-    'Women\'s Clothing', 'Men\'s Clothing', 'Kids\' Clothing', 'Baby Clothing', 'Shoes', 'Jewelry & Watches', 'Handbags & Accessories', 'Sunglasses',
+    'Clothing', 'Shoes', 'Jewelry & Watches', 'Handbags & Accessories', 'Sunglasses',
     
     // Health & Beauty
     'Beauty & Cosmetics', 'Personal Care', 'Health & Wellness', 'Vision Center', 'Pharmacy', 'Vitamins & Supplements', 'Medical Supplies',
@@ -180,10 +180,7 @@ async function init() {
     { id: 'vacuum-floor-care', name: 'Vacuum & Floor Care' },
     
     // Fashion & Clothing
-    { id: 'womens-clothing', name: 'Women\'s Clothing' },
-    { id: 'mens-clothing', name: 'Men\'s Clothing' },
-    { id: 'kids-clothing', name: 'Kids\' Clothing' },
-    { id: 'baby-clothing', name: 'Baby Clothing' },
+    { id: 'clothing', name: 'Clothing' },
     { id: 'shoes', name: 'Shoes' },
     { id: 'jewelry-watches', name: 'Jewelry & Watches' },
     { id: 'handbags-accessories', name: 'Handbags & Accessories' },
