@@ -103,7 +103,52 @@ async function init() {
 
   // seed categories and items if empty
   // ensure a set of useful categories exist; insert any that are missing
-  const defaultCats = ['Electronics','Home & Kitchen','Clothing','Beauty & Personal Care','Sports & Outdoors','Books','Toys & Games','Automotive','Grocery','Office Products','Health & Household','Tools & Home Improvement','Garden & Outdoor','Pet Supplies','Other'];
+  const defaultCats = [
+    // Electronics & Technology
+    'Cell Phones & Accessories', 'Computers & Tablets', 'TV & Audio', 'Video Games', 'Electronics Accessories', 'Smart Home & Security', 'Cameras & Photography', 'Wearable Technology',
+    
+    // Home & Living
+    'Furniture', 'Home Decor', 'Kitchen & Dining', 'Bedding & Bath', 'Storage & Organization', 'Lighting', 'Appliances', 'Vacuum & Floor Care',
+    
+    // Fashion & Clothing
+    'Women\'s Clothing', 'Men\'s Clothing', 'Kids\' Clothing', 'Baby Clothing', 'Shoes', 'Jewelry & Watches', 'Handbags & Accessories', 'Sunglasses',
+    
+    // Health & Beauty
+    'Beauty & Cosmetics', 'Personal Care', 'Health & Wellness', 'Vision Center', 'Pharmacy', 'Vitamins & Supplements', 'Medical Supplies',
+    
+    // Grocery & Food
+    'Fresh Produce', 'Meat & Seafood', 'Dairy & Eggs', 'Pantry & Dry Goods', 'Frozen Foods', 'Beverages', 'Snacks & Candy', 'Organic & Natural',
+    
+    // Baby & Kids
+    'Baby Care', 'Baby Gear', 'Baby Food & Formula', 'Diapers & Wipes', 'Toys & Games', 'Learning & Education', 'Arts & Crafts',
+    
+    // Sports & Recreation
+    'Exercise & Fitness', 'Outdoor Recreation', 'Sports Equipment', 'Hunting & Fishing', 'Team Sports', 'Water Sports', 'Winter Sports',
+    
+    // Automotive & Transportation
+    'Auto Parts & Accessories', 'Tires & Wheels', 'Car Electronics', 'Motor Oil & Fluids', 'Car Care & Cleaning', 'Tools & Equipment',
+    
+    // Home Improvement & Tools
+    'Building Materials', 'Hardware', 'Power Tools', 'Hand Tools', 'Paint & Supplies', 'Plumbing', 'Electrical', 'Lawn & Garden',
+    
+    // Garden & Outdoor Living
+    'Plants & Flowers', 'Garden Tools', 'Outdoor Furniture', 'Grills & Outdoor Cooking', 'Patio & Garden Decor', 'Pest Control', 'Pool & Spa',
+    
+    // Office & School Supplies
+    'Office Supplies', 'School & Educational Supplies', 'Calendars & Planners', 'Printing & Imaging', 'Office Furniture', 'Business & Industrial',
+    
+    // Books & Media
+    'Books', 'Movies & TV', 'Music', 'Video Games & Consoles', 'Magazines & Newspapers',
+    
+    // Pet Care
+    'Dog Supplies', 'Cat Supplies', 'Fish & Aquatic Pets', 'Bird Supplies', 'Small Animal Supplies', 'Pet Food', 'Pet Health & Wellness',
+    
+    // Seasonal & Occasions
+    'Christmas & Holiday', 'Halloween', 'Valentine\'s Day', 'Easter', 'Back to School', 'Summer & Beach', 'Party Supplies',
+    
+    // Other Categories
+    'Gift Cards', 'Services', 'Clearance', 'Other'
+  ];
   for (let i = 0; i < defaultCats.length; i++) {
     const name = defaultCats[i];
     const exists = await db.get('SELECT id FROM categories WHERE name = ?', [name]);
@@ -112,22 +157,139 @@ async function init() {
     }
   }
 
-  // migration: convert seeded categories to deterministic slug IDs (e.g. 'electronics')
+  // migration: convert seeded categories to deterministic slug IDs
   const slugMap = [
-    { id: 'electronics', name: 'Electronics' },
-    { id: 'home-kitchen', name: 'Home & Kitchen' },
-    { id: 'clothing', name: 'Clothing' },
-    { id: 'beauty-personal-care', name: 'Beauty & Personal Care' },
-    { id: 'sports-outdoors', name: 'Sports & Outdoors' },
-    { id: 'books', name: 'Books' },
+    // Electronics & Technology
+    { id: 'cell-phones-accessories', name: 'Cell Phones & Accessories' },
+    { id: 'computers-tablets', name: 'Computers & Tablets' },
+    { id: 'tv-audio', name: 'TV & Audio' },
+    { id: 'video-games', name: 'Video Games' },
+    { id: 'electronics-accessories', name: 'Electronics Accessories' },
+    { id: 'smart-home-security', name: 'Smart Home & Security' },
+    { id: 'cameras-photography', name: 'Cameras & Photography' },
+    { id: 'wearable-technology', name: 'Wearable Technology' },
+    
+    // Home & Living
+    { id: 'furniture', name: 'Furniture' },
+    { id: 'home-decor', name: 'Home Decor' },
+    { id: 'kitchen-dining', name: 'Kitchen & Dining' },
+    { id: 'bedding-bath', name: 'Bedding & Bath' },
+    { id: 'storage-organization', name: 'Storage & Organization' },
+    { id: 'lighting', name: 'Lighting' },
+    { id: 'appliances', name: 'Appliances' },
+    { id: 'vacuum-floor-care', name: 'Vacuum & Floor Care' },
+    
+    // Fashion & Clothing
+    { id: 'womens-clothing', name: 'Women\'s Clothing' },
+    { id: 'mens-clothing', name: 'Men\'s Clothing' },
+    { id: 'kids-clothing', name: 'Kids\' Clothing' },
+    { id: 'baby-clothing', name: 'Baby Clothing' },
+    { id: 'shoes', name: 'Shoes' },
+    { id: 'jewelry-watches', name: 'Jewelry & Watches' },
+    { id: 'handbags-accessories', name: 'Handbags & Accessories' },
+    { id: 'sunglasses', name: 'Sunglasses' },
+    
+    // Health & Beauty
+    { id: 'beauty-cosmetics', name: 'Beauty & Cosmetics' },
+    { id: 'personal-care', name: 'Personal Care' },
+    { id: 'health-wellness', name: 'Health & Wellness' },
+    { id: 'vision-center', name: 'Vision Center' },
+    { id: 'pharmacy', name: 'Pharmacy' },
+    { id: 'vitamins-supplements', name: 'Vitamins & Supplements' },
+    { id: 'medical-supplies', name: 'Medical Supplies' },
+    
+    // Grocery & Food
+    { id: 'fresh-produce', name: 'Fresh Produce' },
+    { id: 'meat-seafood', name: 'Meat & Seafood' },
+    { id: 'dairy-eggs', name: 'Dairy & Eggs' },
+    { id: 'pantry-dry-goods', name: 'Pantry & Dry Goods' },
+    { id: 'frozen-foods', name: 'Frozen Foods' },
+    { id: 'beverages', name: 'Beverages' },
+    { id: 'snacks-candy', name: 'Snacks & Candy' },
+    { id: 'organic-natural', name: 'Organic & Natural' },
+    
+    // Baby & Kids
+    { id: 'baby-care', name: 'Baby Care' },
+    { id: 'baby-gear', name: 'Baby Gear' },
+    { id: 'baby-food-formula', name: 'Baby Food & Formula' },
+    { id: 'diapers-wipes', name: 'Diapers & Wipes' },
     { id: 'toys-games', name: 'Toys & Games' },
-    { id: 'automotive', name: 'Automotive' },
-    { id: 'grocery', name: 'Grocery' },
-    { id: 'office-products', name: 'Office Products' },
-    { id: 'health-household', name: 'Health & Household' },
-    { id: 'tools-home-improvement', name: 'Tools & Home Improvement' },
-    { id: 'garden-outdoor', name: 'Garden & Outdoor' },
-    { id: 'pet-supplies', name: 'Pet Supplies' },
+    { id: 'learning-education', name: 'Learning & Education' },
+    { id: 'arts-crafts', name: 'Arts & Crafts' },
+    
+    // Sports & Recreation
+    { id: 'exercise-fitness', name: 'Exercise & Fitness' },
+    { id: 'outdoor-recreation', name: 'Outdoor Recreation' },
+    { id: 'sports-equipment', name: 'Sports Equipment' },
+    { id: 'hunting-fishing', name: 'Hunting & Fishing' },
+    { id: 'team-sports', name: 'Team Sports' },
+    { id: 'water-sports', name: 'Water Sports' },
+    { id: 'winter-sports', name: 'Winter Sports' },
+    
+    // Automotive & Transportation
+    { id: 'auto-parts-accessories', name: 'Auto Parts & Accessories' },
+    { id: 'tires-wheels', name: 'Tires & Wheels' },
+    { id: 'car-electronics', name: 'Car Electronics' },
+    { id: 'motor-oil-fluids', name: 'Motor Oil & Fluids' },
+    { id: 'car-care-cleaning', name: 'Car Care & Cleaning' },
+    { id: 'tools-equipment', name: 'Tools & Equipment' },
+    
+    // Home Improvement & Tools
+    { id: 'building-materials', name: 'Building Materials' },
+    { id: 'hardware', name: 'Hardware' },
+    { id: 'power-tools', name: 'Power Tools' },
+    { id: 'hand-tools', name: 'Hand Tools' },
+    { id: 'paint-supplies', name: 'Paint & Supplies' },
+    { id: 'plumbing', name: 'Plumbing' },
+    { id: 'electrical', name: 'Electrical' },
+    { id: 'lawn-garden', name: 'Lawn & Garden' },
+    
+    // Garden & Outdoor Living
+    { id: 'plants-flowers', name: 'Plants & Flowers' },
+    { id: 'garden-tools', name: 'Garden Tools' },
+    { id: 'outdoor-furniture', name: 'Outdoor Furniture' },
+    { id: 'grills-outdoor-cooking', name: 'Grills & Outdoor Cooking' },
+    { id: 'patio-garden-decor', name: 'Patio & Garden Decor' },
+    { id: 'pest-control', name: 'Pest Control' },
+    { id: 'pool-spa', name: 'Pool & Spa' },
+    
+    // Office & School Supplies
+    { id: 'office-supplies', name: 'Office Supplies' },
+    { id: 'school-educational-supplies', name: 'School & Educational Supplies' },
+    { id: 'calendars-planners', name: 'Calendars & Planners' },
+    { id: 'printing-imaging', name: 'Printing & Imaging' },
+    { id: 'office-furniture', name: 'Office Furniture' },
+    { id: 'business-industrial', name: 'Business & Industrial' },
+    
+    // Books & Media
+    { id: 'books', name: 'Books' },
+    { id: 'movies-tv', name: 'Movies & TV' },
+    { id: 'music', name: 'Music' },
+    { id: 'video-games-consoles', name: 'Video Games & Consoles' },
+    { id: 'magazines-newspapers', name: 'Magazines & Newspapers' },
+    
+    // Pet Care
+    { id: 'dog-supplies', name: 'Dog Supplies' },
+    { id: 'cat-supplies', name: 'Cat Supplies' },
+    { id: 'fish-aquatic-pets', name: 'Fish & Aquatic Pets' },
+    { id: 'bird-supplies', name: 'Bird Supplies' },
+    { id: 'small-animal-supplies', name: 'Small Animal Supplies' },
+    { id: 'pet-food', name: 'Pet Food' },
+    { id: 'pet-health-wellness', name: 'Pet Health & Wellness' },
+    
+    // Seasonal & Occasions
+    { id: 'christmas-holiday', name: 'Christmas & Holiday' },
+    { id: 'halloween', name: 'Halloween' },
+    { id: 'valentines-day', name: 'Valentine\'s Day' },
+    { id: 'easter', name: 'Easter' },
+    { id: 'back-to-school', name: 'Back to School' },
+    { id: 'summer-beach', name: 'Summer & Beach' },
+    { id: 'party-supplies', name: 'Party Supplies' },
+    
+    // Other Categories
+    { id: 'gift-cards', name: 'Gift Cards' },
+    { id: 'services', name: 'Services' },
+    { id: 'clearance', name: 'Clearance' },
     { id: 'other', name: 'Other' },
   ];
 
